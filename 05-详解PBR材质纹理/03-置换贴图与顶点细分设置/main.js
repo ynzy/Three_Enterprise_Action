@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import gsap from "gsap";
 import * as dat from "dat.gui";
-// 目标: 05-环境遮挡贴图与强度
+// 目标: 03.置换贴图与顶点细分设置
 
 // 创建场景
 const scene = new THREE.Scene();
@@ -19,15 +19,23 @@ camera.position.set(0, 0, 10);
 // 将相机添加到场景中
 scene.add(camera);
 
-// 导入纹理
+// 创建材质加载器
 const textureLoader = new THREE.TextureLoader();
+// 导入纹理
 const doorTexture = textureLoader.load("../../assets/textures/door/color.jpg");
+// 导入透明贴图
 const doorAlphaTexture = textureLoader.load("../../assets/textures/door/alpha.jpg");
+// 导入环境遮挡贴图
+const doorAoTexture = textureLoader.load("../../assets/textures/door/ambientOcclusion.jpg");
+// 导入置换贴图
+const doorHeightTexture = textureLoader.load("../../assets/textures/door/height.jpg");
+// 导入法线贴图
+const doorNormalTexture = textureLoader.load("../../assets/textures/door/normal.jpg");
 
 // 创建几何体
-const geometry = new THREE.BoxGeometry();
-// 创建材质
-const material = new THREE.MeshBasicMaterial({ 
+const geometry = new THREE.BoxGeometry(1, 1, 1, 100, 100, 100);
+// 创建标准网格材质
+const material = new THREE.MeshStandardMaterial({ 
   color: "#ffff00",
   // 设置纹理
   map: doorTexture,
@@ -35,15 +43,27 @@ const material = new THREE.MeshBasicMaterial({
   alphaMap: doorAlphaTexture,
   // 设置透明
   transparent: true,
+  // 设置环境遮挡贴图
+  aoMap: doorAoTexture,
+  // 设置环境遮挡贴图强度
+  aoMapIntensity: 1,
+  // 设置置换贴图
+  displacementMap: doorHeightTexture,
+  // 设置置换贴图
+  displacementMap: doorHeightTexture,
+  // 设置置换贴图强度
+  displacementScale: 0.1,
  });
+//给geometry设置第二组UV
+geometry.setAttribute("uv2", new THREE.BufferAttribute(geometry.attributes.uv.array, 2)); 
 
 const mesh = new THREE.Mesh(geometry, material);
 // 将几何体添加到场景中
 scene.add(mesh);
 
 // 添加一个平面
-const planeGeometry = new THREE.PlaneGeometry(1, 1);
-const planeMaterial = new THREE.MeshBasicMaterial({
+const planeGeometry = new THREE.PlaneGeometry(1, 1,200,200);
+const planeMaterial = new THREE.MeshStandardMaterial({
   // color: "#20d400",
   map: doorTexture,
   // 设置透明材质
@@ -53,12 +73,31 @@ const planeMaterial = new THREE.MeshBasicMaterial({
   // 设置双面显示
   side: THREE.DoubleSide,
   // 设置透明度
-  opacity: 0.5,
+  // opacity: 0.5,
+  // 设置环境遮挡贴图
+  aoMap: doorAoTexture,
+  // 设置环境遮挡贴图强度
+  aoMapIntensity: 1,
+  // 设置置换贴图
+  displacementMap: doorHeightTexture,
+  // 设置置换贴图强度
+  displacementScale: 0.1,
  });
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-plane.position.set(3, 0, 0);
+plane.position.set(1, 0, 0);
 scene.add(plane);
 
+// 给平面设置第二组UV
+planeGeometry.setAttribute("uv2", new THREE.BufferAttribute(planeGeometry.attributes.uv.array, 2));
+
+
+// 添加环境光
+const ambientLight = new THREE.AmbientLight(0xffffff);
+scene.add(ambientLight);
+// 添加平行光
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(10, 10, 10);
+scene.add(directionalLight);
 
 // 初始化渲染器
 const renderer = new THREE.WebGLRenderer();

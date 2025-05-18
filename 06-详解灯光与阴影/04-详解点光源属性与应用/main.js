@@ -7,7 +7,7 @@ import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 
 const gui = new dat.GUI();
 
-// 目标: 03-详解聚光灯各种属性与应用
+// 目标: 04.详解点光源属性与应用
 
 
 // 创建场景
@@ -43,60 +43,36 @@ plane.rotation.x = -Math.PI / 2;
 plane.receiveShadow = true;
 scene.add(plane);
 
+// 创建一个球
+const smallBall = new THREE.Mesh(
+  new THREE.SphereGeometry(0.1, 20, 20),
+  new THREE.MeshBasicMaterial({ color: 0xff0000 })
+)
+
+smallBall.position.set(2,2,2)
+
+scene.add(smallBall);
 
 
 // 添加环境光
 const ambientLight = new THREE.AmbientLight(0xffffff,0.5);
 scene.add(ambientLight);
 // 添加聚光灯
-const spotLight = new THREE.SpotLight(0xffffff, 0.5);
-spotLight.position.set(5, 5, 5);
+const pointLight = new THREE.PointLight(0xff0000, 1);
+// pointLight.position.set(2, 2, 2);
+smallBall.add(pointLight);
 // 开启阴影计算
-spotLight.castShadow = true;
-scene.add(spotLight);
+pointLight.castShadow = true;
 
 // 设置阴影贴图模糊度
-spotLight.shadow.radius = 20;
+pointLight.shadow.radius = 20;
 // 设置阴影贴图的分辨率
-spotLight.shadow.mapSize.set(4096,4096);
-
-// 将聚光灯的目标设置为sphere对象
-spotLight.target = sphere;
-
-// 设置聚光灯的角度为π/6
-spotLight.angle = Math.PI / 6;
-
-// 设置聚光灯的照射距离为0，表示没有限制
-spotLight.distance = 0;
-
-// 设置聚光灯的半影大小为0，表示没有半影效果
-spotLight.penumbra = 0;
-
-// 设置聚光灯的衰减因子为0，表示光强度不会随距离衰减
-spotLight.decay = 0;
-
-// 设置聚光灯的强度为1
-spotLight.intensity = 1;
+pointLight.shadow.mapSize.set(512,512);
+pointLight.decay = 0
 
 // 在图形用户界面（gui）中添加sphere位置的x轴控制项
 // 允许用户在-5到5的范围内以0.1的步长调整sphere的位置
 gui.add(sphere.position, "x").min(-5).max(5).step(0.1);
-
-// 在gui中添加聚光灯角度的控制项
-// 允许用户在0到π/2的范围内以0.01的步长调整聚光灯的角度
-gui.add(spotLight, "angle").min(0).max(Math.PI / 2).step(0.01);
-
-// 在gui中添加聚光灯照射距离的控制项
-// 允许用户在0到10的范围内以0.01的步长调整聚光灯的照射距离
-gui.add(spotLight, "distance").min(0).max(10).step(0.01);
-
-// 在gui中添加聚光灯半影大小的控制项
-// 允许用户在0到1的范围内以0.01的步长调整聚光灯的半影大小
-gui.add(spotLight, "penumbra").min(0).max(1).step(0.01);
-
-// 在gui中添加聚光灯衰减因子的控制项
-// 允许用户在0到5的范围内以0.01的步长调整聚光灯的衰减因子
-gui.add(spotLight, "decay").min(0).max(5).step(0.01);
 
 
 
@@ -122,8 +98,16 @@ controls.enableDamping = true;
 const axesHelper = new THREE.AxesHelper(5);
 scene.add(axesHelper);
 
+const clock = new THREE.Clock();
+
 // 循环渲染
 function render() {
+  let time = clock.getElapsedTime()
+  // 圆周运动，x,z
+  smallBall.position.x = Math.sin(time) * 3;
+  smallBall.position.z = Math.cos(time) * 3;
+  // 球在y轴上运动
+  smallBall.position.y = 2 + Math.sin(time)
   controls.update();
   renderer.render(scene, camera);
   // 渲染下一帧的时候就会调用render函数
